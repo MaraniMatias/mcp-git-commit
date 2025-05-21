@@ -1,0 +1,20 @@
+{
+  "name": "mcp-git-commit",
+  "module": "index.js",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+    "dev": "npx -y @modelcontextprotocol/inspector bun index.js",
+    "start": "bun index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.5",
+    "simple-git": "^3.27.0",
+    "zod": "^3.25.17"
+  }
+}
