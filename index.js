@@ -1,88 +1,65 @@
 import path from "path";
+import { fileURLToPath } from "url";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import simpleGit from "simple-git";
 
-// const REPO_DIR = process.env.PWD;
-// if (!REPO_DIR) {
-//   console.error("Please set PWD environment variable to the root of the repository");
-//   process.exit(1);
-// }
+// Determine repository directory (env override or project root)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DEFAULT_REPO_DIR = process.env.PWD || path.resolve(__dirname, "..");
 
+// Create MCP server and register tools
 const server = new McpServer({
-  name: "git-commit",
+  name: "git-mcp",
   version: "1.0.0",
 });
 
 server.tool(
-  "generate git commit",
+  "generate_commit",
   {
     type: z.enum(["feat", "fix", "chore", "docs", "refactor"]),
     scope: z.string().optional(),
     message: z.string().min(1).max(70),
     description: z.string().optional(),
   },
-  async ({ type, description, scope, message }) => ({
-    content: [
-      {
-        type: "text",
-        text: `${type}${scope ? `(${scope})` : ""}: ${message}\n\nAI:\n${description || ""}`,
-      },
-    ],
-  }),
+  async ({ type, scope, message, description }) => {
+    const header = `${type}${scope ? `(${scope})` : ""}: ${message}`;
+    const body = description ? `AI:\n${description}` : "";
+    return { content: [{ type: "text", text: `${header}\n\n${body}` }] };
+  },
 );
 
 /**
- * Obtiene diff completo de git como texto
- * @param {import("simple-git").SimpleGit} git
- * @returns {Promise<{diff:string, stat: import("simple-git").repo.diffSummary}>}
- */
-function getDiffText(git) {
-  return async () => {
-    try {
-      const diff = await git.diff();
-      const stat = await git.diffSummary();
-      return { diff, stat };
-    } catch (err) {
-      throw new Error(`Error obteniendo diff: ${err}`);
-    }
-  };
-}
-
-/**
- * Inferir posibles scopes a partir de las rutas de archivos modificados
+ * Infer possible scopes from file paths
  * @param {string[]} files
- * @returns {string}
+ * @returns {string[]}
  */
 function inferScopes(files) {
-  const scopes = Array.from(
-    new Set(files.map((f) => path.dirname(f).split(path.sep)[0]?.replaceAll(".", "")).filter(Boolean)),
-  );
-  return scopes.length ? scopes : [];
+  const scopes = new Set();
+  files.forEach((f) => {
+    const [dir] = path.dirname(f).split(path.sep);
+    if (dir?.replaceAll(".", "")) scopes.add(dir);
+  });
+  return Array.from(scopes);
 }
 
 server.tool(
-  "get git diff",
+  "diff",
   {
-    repoPath: z.string(),
+    repoPath: z.string().default(DEFAULT_REPO_DIR),
   },
   async ({ repoPath }) => {
-    const git = simpleGit(path.normalize(repoPath));
-    const { diff, stat } = await getDiffText(git)();
-    const files = stat.files.map((f) => f.file);
-    const possibleScopes = inferScopes(files);
-
-    return {
-      content: [
-        {
-          diff,
-          stat,
-          files,
-          possibleScopes,
-        },
-      ],
-    };
+    try {
+      const git = simpleGit(path.normalize(repoPath));
+      const diff = await git.diff();
+      const stat = await git.diffSummary();
+      const files = stat.files.map((f) => f.file);
+      const possibleScopes = inferScopes(files);
+      return { content: [{ type: "text", text: JSON.stringify({ diff, stat, files, possibleScopes }) }] };
+    } catch (err) {
+      return { content: [{ type: "text", text: err.message }] };
+    }
   },
 );
 
