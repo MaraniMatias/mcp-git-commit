@@ -1,17 +1,15 @@
 # mcp-git-commit
 
+A simple examplet to create MCP Server ([modelcontextprotocol.io](https://modelcontextprotocol.io/introduction))
+
+
 ![./test_imge.png](./test_imge.png)
-
-https://github.com/modelcontextprotocol/typescript-sdk
-
-[modelcontextprotocol.io](https://modelcontextprotocol.io/introduction)
-
-[typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk)
 
 
 To install dependencies:
 
-[https://www.npmjs.com/package/simple-git](https://www.npmjs.com/package/simple-git)
+- [typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk)
+- [https://www.npmjs.com/package/simple-git](https://www.npmjs.com/package/simple-git)
 
 ```bash
 bun install
@@ -31,8 +29,7 @@ bun dev
 
 This project was created using `bun init` in bun v1.2.13. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
 
-Using with model
-
+You can test it with [ollama](https://ollama.com/) and [mcphost](https://github.com/mark3labs/mcphost)
 ```jsonc
 // nvim ~/.mcp.json
 {
