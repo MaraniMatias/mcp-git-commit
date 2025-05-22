@@ -1,6 +1,13 @@
 # mcp-git-commit
 
-![./test_imge.png]
+![./test_imge.png](./test_imge.png)
+
+https://github.com/modelcontextprotocol/typescript-sdk
+
+[modelcontextprotocol.io](https://modelcontextprotocol.io/introduction)
+
+[typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk)
+
 
 To install dependencies:
 
