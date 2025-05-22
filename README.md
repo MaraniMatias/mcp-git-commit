@@ -1,6 +1,10 @@
 # mcp-git-commit
 
+![./test_imge.png]
+
 To install dependencies:
+
+[https://www.npmjs.com/package/simple-git](https://www.npmjs.com/package/simple-git)
 
 ```bash
 bun install
@@ -9,7 +13,13 @@ bun install
 To run:
 
 ```bash
-bun run index.js
+bun start
+```
+
+To dev:
+
+```bash
+bun dev
 ```
 
 This project was created using `bun init` in bun v1.2.13. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
@@ -22,7 +32,10 @@ Using with model
   "mcpServers": {
     "git-commit": {
       "command": "node",
-      "args": ["/Users/matiasmarani/Trabajo/mcp-git-commit/index.js"],
+      "args": ["../../mcp-git-commit/index.js"],
+      "env": {
+        "PWD": "",
+      },
     },
   },
 }

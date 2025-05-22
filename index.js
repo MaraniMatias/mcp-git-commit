@@ -1,15 +1,14 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+// MCP Server imports
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+// Feature imports
+import os from "os";
+import path from "path";
 import simpleGit from "simple-git";
 
-// Determine repository directory (env override or project root)
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_REPO_DIR = process.env.PWD || path.resolve(__dirname, "..");
+const DEFAULT_REPO_DIR = process.env.PWD;
 
-// Create MCP server and register tools
 const server = new McpServer({
   name: "git-mcp",
   version: "1.0.0",
@@ -18,21 +17,29 @@ const server = new McpServer({
 server.tool(
   "generate_commit",
   {
-    type: z.enum(["feat", "fix", "chore", "docs", "refactor"]),
-    scope: z.string().optional(),
-    message: z.string().min(1).max(70),
-    description: z.string().optional(),
+    type: z.enum(["feat", "fix", "chore", "docs", "refactor"]).describe("Type of commit"),
+    scope: z.string().optional().describe("Scope of commit"),
+    message: z.string().min(1).max(140).describe("Message of commit"),
+    description: z.string().optional().describe("Description of commit"),
   },
   async ({ type, scope, message, description }) => {
     const header = `${type}${scope ? `(${scope})` : ""}: ${message}`;
     const body = description ? `AI:\n${description}` : "";
-    return { content: [{ type: "text", text: `${header}\n\n${body}` }] };
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `${header}\n\n${body}`,
+        },
+      ],
+    };
   },
 );
 
 /**
  * Infer possible scopes from file paths
- * @param {string[]} files
+ * @param {string[]} files - List of files with champes
  * @returns {string[]}
  */
 function inferScopes(files) {
@@ -47,7 +54,7 @@ function inferScopes(files) {
 server.tool(
   "diff",
   {
-    repoPath: z.string().default(DEFAULT_REPO_DIR),
+    repoPath: z.string().default(DEFAULT_REPO_DIR).describe("Path to git repository"),
   },
   async ({ repoPath }) => {
     try {
@@ -56,11 +63,48 @@ server.tool(
       const stat = await git.diffSummary();
       const files = stat.files.map((f) => f.file);
       const possibleScopes = inferScopes(files);
-      return { content: [{ type: "text", text: JSON.stringify({ diff, stat, files, possibleScopes }) }] };
+
+      const tmpDir = os.tmpdir();
+      const tmpFile = path.join(tmpDir, "git-diff.md");
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({ diff, stat, files, possibleScopes }),
+          },
+          {
+            type: "resource",
+            resource: {
+              uri: tmpFile,
+              text: `# Git diff\n\`\`\`diff\n${diff}\n\`\`\`\n`,
+              mimeType: "text/markdown",
+            },
+          },
+        ],
+      };
     } catch (err) {
       return { content: [{ type: "text", text: err.message }] };
     }
   },
+);
+
+server.prompt(
+  "prompt_git_commit",
+  {
+    repoPath: z.string().default(DEFAULT_REPO_DIR).describe("Path to git repository"),
+  },
+  ({ repoPath }) => ({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Please analice this diff on "${repoPath}", for generate a commit messages, type, scope and commit description`,
+        },
+      },
+    ],
+  }),
 );
 
 // Start receiving messages on stdin and sending messages on stdout
