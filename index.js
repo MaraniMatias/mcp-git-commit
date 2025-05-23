@@ -110,3 +110,63 @@ server.prompt(
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport();
 await server.connect(transport);
+
+
+
+// server.tool(
+//   "generate_branch",
+//   {
+//     type: z.enum(["feat", "bug", "refactor"]).describe("Type of branch"),
+//     taskId: z.string().describe("Task ID"),
+//     branchName: z.string().min(1).max(30).describe("Branch name"),
+//   },
+//   async ({ type, taskId, branchName }) => ({
+//     content: [
+//       {
+//         type: "text",
+//         text: `${type}/${taskId}-${branchName}`,
+//       },
+//     ],
+//   }),
+// );
+
+// server.prompt(
+//   "prompt_get_branch_type_name",
+//   {
+//     taskTitle: z.string().describe("Task title"),
+//     taskDescription: z.string().optional().describe("Task description"),
+//   },
+//   ({ taskTitle, taskDescription }) => {
+//     if (taskTitle || !taskDescription) {
+//       return {
+//         messages: [
+//           {
+//             role: "user",
+//             content: {
+//               type: "text",
+//               text: `Please use this task title "${taskTitle}" to for generate a branch type, task id, and branch name`,
+//             },
+//           },
+//           {
+//             role: "assistant",
+//             content: {
+//               type: "text",
+//               text: "Please provide the task description to generate a branch name.",
+//             },
+//           },
+//         ],
+//       };
+//     }
+//     return {
+//       messages: [
+//         {
+//           role: "user",
+//           content: {
+//             type: "text",
+//             text: `Please use this task title "${taskTitle}" and this task description "${taskDescription}" to for generate a branch, type, task id, branch name`,
+//           },
+//         },
+//       ],
+//     };
+//   },
+// );
