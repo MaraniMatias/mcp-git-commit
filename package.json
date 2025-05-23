@@ -2,6 +2,7 @@
   "name": "mcp-git-commit",
   "module": "index.js",
   "type": "module",
+  "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -13,8 +14,8 @@
     "start": "bun index.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.5",
-    "simple-git": "^3.27.0",
-    "zod": "^3.25.17"
+    "@modelcontextprotocol/sdk": "1.12.0",
+    "simple-git": "3.27.0",
+    "zod": "3.25.23"
   }
 }
